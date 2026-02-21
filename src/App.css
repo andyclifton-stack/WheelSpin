@@ -1,0 +1,152 @@
+.app-layout {
+    min-height: 100vh;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+    transition: background-color 1.5s ease;
+}
+
+.app-layout.tension {
+    background-color: #020617;
+    /* Even darker in tension mode */
+}
+
+.sidebar-container {
+    /* Desktop styles */
+    width: 320px;
+    height: 100vh;
+    flex-shrink: 0;
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 100;
+    background-color: #0f172a;
+}
+
+.sidebar-container:not(.open) {
+    margin-left: -320px;
+}
+
+.close-sidebar-btn {
+    display: none;
+}
+
+.menu-button {
+    position: absolute;
+    top: 1.5rem;
+    left: 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 8px;
+    padding: 0.5rem;
+    cursor: pointer;
+    z-index: 1000;
+    backdrop-filter: blur(8px);
+    transition: background 0.2s, transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.menu-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+.sidebar-overlay {
+    display: none;
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.header {
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+.header h1 {
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin: 0;
+    background: linear-gradient(135deg, #a855f7, #3b82f6, #06b6d4);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 4px 10px rgba(168, 85, 247, 0.4));
+    letter-spacing: -1px;
+}
+
+.header p {
+    color: #94a3b8;
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
+}
+
+.wheel-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 2rem;
+    min-height: 500px;
+}
+
+.winner-announcement {
+    text-align: center;
+    margin-bottom: 1rem;
+    min-height: 4rem;
+    display: flex;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: visibility 0.5s;
+}
+
+.winner-announcement.show {
+    visibility: visible;
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.winner-announcement h2 {
+    font-size: 3rem;
+    margin: 0;
+    text-transform: uppercase;
+    text-shadow: 0 0 20px currentColor;
+    letter-spacing: 2px;
+}
+
+@keyframes popIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.5) translateY(20px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        min-height: 100vh;
+    }
+
+    .menu-button {
+        top: 1rem;
+        left: 1rem;
+    }
+
+    .header h1 {
+        font-size: 2.5rem;
+    }
+}

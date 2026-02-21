@@ -1,0 +1,272 @@
+.wheel-container {
+    position: relative;
+    width: 400px;
+    height: 400px;
+    max-width: 90vw;
+    max-height: 90vw;
+    flex-shrink: 0;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 2rem auto;
+    border-radius: 50%;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), 0 0 100px rgba(59, 130, 246, 0.4);
+}
+
+/* Massive Neon Pulse Aura */
+.wheel-container::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    bottom: -20px;
+    left: -20px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, #ff007f, #7f00ff, #00ffff, #00ff00, #ffff00, #ff007f);
+    z-index: -1;
+    animation: rotate-glow 5s linear infinite;
+    filter: blur(25px);
+    opacity: 0.75;
+}
+
+@keyframes rotate-glow {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.wheel-container::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    bottom: -6px;
+    left: -6px;
+    border-radius: 50%;
+    border: 8px solid #0f172a;
+    box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.2), 0 0 20px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+    z-index: 10;
+}
+
+/* The pointer at the top */
+.pointer {
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 18px solid transparent;
+    border-right: 18px solid transparent;
+    border-top: 35px solid #fbbf24;
+    z-index: 100;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 15px rgba(251, 191, 36, 0.6));
+    transition: transform 0.05s ease-out;
+    /* For jolt physics */
+}
+
+.pointer::after {
+    content: '';
+    position: absolute;
+    top: -35px;
+    left: -10px;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 25px solid #fef3c7;
+}
+
+/* Spark Particle System */
+.spark-particle {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    width: 5px;
+    height: 25px;
+    background: #fff;
+    border-radius: 3px;
+    box-shadow: 0 0 15px #fde047, 0 0 30px #f59e0b, 0 0 50px #ef4444;
+    z-index: 110;
+    pointer-events: none;
+    transform-origin: center;
+    animation: spark-fly 0.5s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+
+@keyframes spark-fly {
+    0% {
+        transform: translate(-50%, 0) scale(1) rotate(var(--rot));
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate(calc(-50% + var(--tx)), var(--ty)) scale(0) rotate(var(--rot));
+        opacity: 0;
+    }
+}
+
+.wheel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    box-sizing: border-box;
+    cursor: grab;
+}
+
+.wheel:active {
+    cursor: grabbing;
+}
+
+.wheel-gloss {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(160deg,
+            rgba(255, 255, 255, 0.9) 0%,
+            rgba(255, 255, 255, 0.3) 25%,
+            rgba(255, 255, 255, 0) 35%,
+            rgba(0, 0, 0, 0) 65%,
+            rgba(0, 0, 0, 0.6) 100%);
+    z-index: 40;
+    pointer-events: none;
+    box-shadow: inset 0 20px 50px rgba(255, 255, 255, 0.7), inset 0 -20px 50px rgba(0, 0, 0, 0.8);
+}
+
+.wheel-slice {
+    position: absolute;
+    top: -10%;
+    left: -10%;
+    width: 120%;
+    height: 120%;
+    transform-origin: 50% 50%;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.2s, z-index 0s 0.2s;
+    z-index: 1;
+    cursor: pointer;
+}
+
+/* Create inner radial depth inside each slice */
+.wheel-slice-bg {
+    position: absolute;
+    top: 8.333%;
+    left: 8.333%;
+    width: 83.333%;
+    height: 83.333%;
+    border-radius: 50%;
+    background-image: radial-gradient(circle at center, rgba(255, 255, 255, 0.4) 0%, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.6) 100%);
+    background-blend-mode: overlay;
+}
+
+.wheel-container:not(.is-spinning) .wheel-slice:hover {
+    transform: scale(1.05);
+    z-index: 20;
+    filter: brightness(1.3) drop-shadow(0 0 20px rgba(255, 255, 255, 0.5));
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.2s, z-index 0s;
+}
+
+.wheel-text-container {
+    position: absolute;
+    top: 8.333%;
+    left: 8.333%;
+    width: 83.333%;
+    height: 83.333%;
+    /* Origin at center to rotate texts */
+    transform-origin: 50% 50%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 20px;
+    box-sizing: border-box;
+    pointer-events: none;
+}
+
+.wheel-text {
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8), -1px -1px 4px rgba(0, 0, 0, 0.8);
+    /* Truncate text if it's too long */
+    white-space: nowrap;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /* Rotate text to point outwards */
+    transform: rotate(-90deg);
+    transform-origin: center bottom;
+    margin-top: 40px;
+}
+
+.wheel-center {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    background-color: var(--bg-color);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 50;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5) inset, 0 0 10px rgba(0, 0, 0, 0.8);
+    border: 3px solid rgba(255, 255, 255, 0.1);
+}
+
+.spin-button {
+    background: linear-gradient(135deg, #60a5fa, #3b82f6);
+    border: none;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    color: white;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.5);
+}
+
+.spin-button:hover:not(:disabled) {
+    transform: scale(1.05);
+    background: linear-gradient(135deg, #93c5fd, #60a5fa);
+    box-shadow: 0 6px 15px rgba(59, 130, 246, 0.7);
+}
+
+.spin-button:active:not(:disabled) {
+    transform: scale(0.95);
+    box-shadow: 0 2px 5px rgba(59, 130, 246, 0.4);
+}
+
+.spin-button:disabled {
+    background: #334155;
+    color: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.wheel-divider {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 4px;
+    height: 50%;
+    background-color: rgba(255, 255, 255, 0.25);
+    transform-origin: bottom center;
+    z-index: 2;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+}
+
+@media (max-width: 480px) {
+    .wheel-container {
+        width: 300px;
+        height: 300px;
+    }
+}
