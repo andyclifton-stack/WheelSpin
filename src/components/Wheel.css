@@ -197,8 +197,8 @@
     white-space: nowrap;
     /* Ensure it doesn't wrap, scaling handled dynamically */
     transform: rotate(-90deg);
-    transform-origin: center bottom;
-    margin-top: 40px;
+    transform-origin: center;
+    margin-top: 50px;
     /* Safe max width before it hits the center pin */
     max-width: 145px;
     overflow: hidden;
