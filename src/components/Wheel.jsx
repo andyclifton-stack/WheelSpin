@@ -139,6 +139,23 @@ const Wheel = ({ items, onSpinComplete }) => {
             const clipPath = createClipPath(startAngle, endAngle);
             const rotationAngle = (index * 360) / items.length;
 
+            // Calculate dynamic font size to prevent overlapping or truncation
+            let size = 19; // roughly 1.2rem
+            if (items.length > 6) {
+                // Reduce size based on the number of items so slices don't overlap vertically
+                size = Math.min(size, 300 / items.length);
+            }
+
+            // Reduce size if the text is too long to fit in the slice
+            const maxTextWidth = 145;
+            const estimatedWidth = item.name.length * size * 0.55;
+            if (estimatedWidth > maxTextWidth) {
+                size = maxTextWidth / (item.name.length * 0.55);
+            }
+
+            // Clamp to a lowest readable size
+            size = Math.max(9, size);
+
             return (
                 <div
                     key={`slice-${item.id}`}
@@ -155,7 +172,7 @@ const Wheel = ({ items, onSpinComplete }) => {
                             transform: `rotate(${rotationAngle}deg)`
                         }}
                     >
-                        <span className="wheel-text">{item.name}</span>
+                        <span className="wheel-text" style={{ fontSize: `${size}px` }}>{item.name}</span>
                     </div>
                 </div>
             );

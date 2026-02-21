@@ -194,15 +194,15 @@
     font-weight: bold;
     font-size: 1.2rem;
     text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8), -1px -1px 4px rgba(0, 0, 0, 0.8);
-    /* Truncate text if it's too long */
     white-space: nowrap;
-    max-width: 140px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    /* Rotate text to point outwards */
+    /* Ensure it doesn't wrap, scaling handled dynamically */
     transform: rotate(-90deg);
     transform-origin: center bottom;
     margin-top: 40px;
+    /* Safe max width before it hits the center pin */
+    max-width: 145px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .wheel-center {
