@@ -36,6 +36,8 @@ const Wheel = forwardRef(function Wheel(
   const busy = useRef(false);
   const animation = useRef(null);
   const pointerRef = useRef(null);
+  const releaseTimer = useRef(null);
+  const [releasing, setReleasing] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const signature = items
     .map((item) => `${item.id}:${item.name}:${item.color}`)
@@ -44,7 +46,10 @@ const Wheel = forwardRef(function Wheel(
     rotation.set(0);
     setSelectedId(null);
   }, [signature, rotation]);
-  useEffect(() => () => animation.current?.stop(), []);
+  useEffect(() => () => {
+    animation.current?.stop();
+    clearTimeout(releaseTimer.current);
+  }, []);
   const spin = () => {
     if (busy.current) return;
     if (!items.length) {
@@ -52,6 +57,8 @@ const Wheel = forwardRef(function Wheel(
       return;
     }
     busy.current = true;
+    clearTimeout(releaseTimer.current);
+    setReleasing(false);
     const snapshot = items.map((item) => ({ ...item }));
     let index;
     try {
@@ -72,6 +79,10 @@ const Wheel = forwardRef(function Wheel(
     const finish = () => {
       busy.current = false;
       setSelectedId(winner.id);
+      if (!reducedMotion) {
+        setReleasing(true);
+        releaseTimer.current = setTimeout(() => setReleasing(false), 320);
+      }
       onComplete(winner, end, snapshot.length);
     };
     if (reducedMotion) {
@@ -197,8 +208,9 @@ const Wheel = forwardRef(function Wheel(
           strokeWidth="2"
         />
       </motion.svg>
+      <div className="wheel-center">
       <button
-        className="spin-button"
+        className={`spin-button ${releasing ? "is-releasing" : ""}`}
         onClick={spin}
         disabled={spinning}
         aria-label={items.length ? "Spin wheel" : "Add entries to wheel"}
@@ -218,6 +230,7 @@ const Wheel = forwardRef(function Wheel(
           </>
         )}
       </button>
+      </div>
     </div>
   );
 });
