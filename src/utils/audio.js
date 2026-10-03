@@ -1,78 +1,55 @@
-let audioCtx = null;
-
-export const initAudio = () => {
-    if (!window.AudioContext && !window.webkitAudioContext) return;
-    if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-    }
-};
-
-export const playTickSound = () => {
-    if (!audioCtx) return;
-
-    // Trigger phone vibration if supported
-    if (typeof navigator !== 'undefined' && navigator.vibrate) {
-        navigator.vibrate(10); // 10ms short tap
-    }
-
+let audioCtx;
+export function initAudio() {
+  try {
+    const Context = window.AudioContext || window.webkitAudioContext;
+    if (!Context) return;
+    audioCtx ||= new Context();
+    if (audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
+  } catch {}
+}
+export function playTickSound() {
+  if (!audioCtx || audioCtx.state !== "running") return;
+  try {
+    const osc = audioCtx.createOscillator(),
+      gain = audioCtx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(460, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(
+      160,
+      audioCtx.currentTime + 0.035,
+    );
+    gain.gain.setValueAtTime(0.065, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.04);
+    osc.onended = () => {
+      osc.disconnect();
+      gain.disconnect();
+    };
+  } catch {}
+}
+export function playTadaSound() {
+  if (!audioCtx || audioCtx.state !== "running") return;
+  [523.25, 659.25, 783.99].forEach((frequency, index) => {
     try {
-        const osc = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.05);
-
-        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
-
-        osc.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.05);
-    } catch (e) {
-        console.error(e);
-    }
-};
-
-export const playTadaSound = () => {
-    if (!audioCtx) return;
-    try {
-        const osc1 = audioCtx.createOscillator();
-        const osc2 = audioCtx.createOscillator();
-        const osc3 = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-
-        osc1.type = 'square';
-        osc2.type = 'square';
-        osc3.type = 'square';
-
-        osc1.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
-        osc2.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
-        osc3.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
-
-        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.1);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.5);
-
-        osc1.connect(gainNode);
-        osc2.connect(gainNode);
-        osc3.connect(gainNode);
-
-        gainNode.connect(audioCtx.destination);
-
-        osc1.start(audioCtx.currentTime);
-        osc2.start(audioCtx.currentTime + 0.1);
-        osc3.start(audioCtx.currentTime + 0.2);
-
-        osc1.stop(audioCtx.currentTime + 1.5);
-        osc2.stop(audioCtx.currentTime + 1.5);
-        osc3.stop(audioCtx.currentTime + 1.5);
-    } catch (e) {
-        console.error(e);
-    }
-};
+      const osc = audioCtx.createOscillator(),
+        gain = audioCtx.createGain(),
+        start = audioCtx.currentTime + index * 0.09;
+      osc.type = "sine";
+      osc.frequency.value = frequency;
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.09, start + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.45);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(start);
+      osc.stop(start + 0.45);
+      osc.onended = () => {
+        osc.disconnect();
+        gain.disconnect();
+      };
+    } catch {}
+  });
+}

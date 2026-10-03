@@ -1,230 +1,224 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, useAnimation, useMotionValue } from 'framer-motion';
-import { initAudio, playTickSound } from '../utils/audio';
-import './Wheel.css';
-
-const Wheel = ({ items, onSpinComplete }) => {
-    const [isSpinning, setIsSpinning] = useState(false);
-    const [isTensionMode, setIsTensionMode] = useState(false);
-    const rotation = useMotionValue(0);
-    const controls = useAnimation();
-    const lastTickAngle = useRef(0);
-    const isDragging = useRef(false);
-
-    const sparkRef = useRef(null);
-
-    const triggerSpark = () => {
-        const container = document.querySelector('.wheel-container');
-        if (!container) return;
-
-        const numSparks = Math.floor(Math.random() * 3) + 3; // 3 to 5
-        for (let i = 0; i < numSparks; i++) {
-            const spark = document.createElement('div');
-            spark.className = 'spark-particle';
-
-            // Random trajectory spreading upwards from top center
-            const angle = -90 + (Math.random() * 100 - 50);
-            const velocity = Math.random() * 100 + 80;
-            const x = Math.cos(angle * Math.PI / 180) * velocity;
-            const y = Math.sin(angle * Math.PI / 180) * velocity;
-
-            spark.style.setProperty('--tx', `${x}px`);
-            spark.style.setProperty('--ty', `${y}px`);
-            spark.style.setProperty('--rot', `${angle + 90}deg`);
-
-            container.appendChild(spark);
-            setTimeout(() => {
-                if (spark.parentNode) spark.parentNode.removeChild(spark);
-            }, 500);
-        }
-
-        // Pointer Jolt
-        const pointer = document.querySelector('.pointer');
-        if (pointer) {
-            pointer.style.transform = 'translateX(-50%) translateY(-6px)';
-            setTimeout(() => {
-                if (pointer) pointer.style.transform = 'translateX(-50%) translateY(0)';
-            }, 50);
-        }
-    };
-
-    useEffect(() => {
-        rotation.on("change", (latest) => {
-            const sliceAngle = 360 / items.length;
-            const currentTick = Math.floor(latest / sliceAngle);
-            if (currentTick !== lastTickAngle.current && (isSpinning || isDragging.current)) {
-                lastTickAngle.current = currentTick;
-                playTickSound();
-                triggerSpark();
-            }
-        });
-    }, [items, isSpinning]);
-
-    const handleSpinStart = () => {
-        if (items.length === 0) return;
-        initAudio();
-        setIsSpinning(true);
-        isDragging.current = false;
-
-        const winningIndex = Math.floor(Math.random() * items.length);
-        const sliceAngle = 360 / items.length;
-        const targetAngle = 360 - (winningIndex * sliceAngle);
-        const extraSpins = (Math.floor(Math.random() * 5) + 5) * 360;
-
-        // Use the current physical rotation value
-        const currentR = rotation.get();
-        const finalRotation = currentR + extraSpins + (targetAngle - (currentR % 360));
-
-        controls.start({
-            rotate: finalRotation,
-            transition: { duration: 5, ease: [0.15, 0.9, 0.15, 1] }
-        }).then(() => {
-            setIsSpinning(false);
-            setIsTensionMode(false);
-            onSpinComplete(items[winningIndex]);
-        });
-
-        // Trigger tension mode in the final 2 seconds of the spin
-        setTimeout(() => {
-            setIsTensionMode(true);
-        }, 3000);
-    };
-
-    const handleDragStart = () => {
-        if (isSpinning || items.length === 0) return;
-        initAudio();
-        isDragging.current = true;
-    };
-
-    const handleDragEnd = (event, info) => {
-        isDragging.current = false;
-
-        // If they flicked it hard enough, treat it as a spin
-        if (Math.abs(info.velocity.x) > 500 || Math.abs(info.velocity.y) > 500) {
-            handleSpinStart();
-        } else {
-            // Otherwise just let it rest and lock into the nearest slice
-            const currentR = rotation.get();
-            const sliceAngle = 360 / items.length;
-            const nearestSlice = Math.round(currentR / sliceAngle) * sliceAngle;
-            controls.start({
-                rotate: nearestSlice,
-                transition: { type: 'spring', stiffness: 300, damping: 30 }
-            });
-        }
-    };
-
-    const sliceAngle = 360 / items.length;
-
-    const renderSlices = () => {
-        if (items.length === 0) return null;
-
-        return items.map((item, index) => {
-            const startAngle = index * sliceAngle - sliceAngle / 2;
-            const endAngle = (index + 1) * sliceAngle - sliceAngle / 2;
-
-            const createClipPath = (start, end) => {
-                let points = ['50% 50%'];
-                const arcs = Math.ceil(end - start);
-                for (let i = 0; i <= arcs; i++) {
-                    const a = start + (end - start) * (i / arcs);
-                    const rad = (a - 90) * (Math.PI / 180);
-                    const x = 50 + 43 * Math.cos(rad);
-                    const y = 50 + 43 * Math.sin(rad);
-                    points.push(`${x.toFixed(3)}% ${y.toFixed(3)}%`);
-                }
-                return `polygon(${points.join(', ')})`;
-            };
-
-            const clipPath = createClipPath(startAngle, endAngle);
-            const rotationAngle = (index * 360) / items.length;
-
-            // Calculate dynamic font size to prevent overlapping or truncation
-            let size = 19; // roughly 1.2rem
-            if (items.length > 6) {
-                // Reduce size based on the number of items so slices don't overlap vertically
-                size = Math.min(size, 300 / items.length);
-            }
-
-            // Reduce size if the text is too long to fit in the slice
-            const maxTextWidth = 145;
-            const estimatedWidth = item.name.length * size * 0.55;
-            if (estimatedWidth > maxTextWidth) {
-                size = maxTextWidth / (item.name.length * 0.55);
-            }
-
-            // Clamp to a lowest readable size
-            size = Math.max(9, size);
-
-            return (
-                <div
-                    key={`slice-${item.id}`}
-                    className="wheel-slice"
-                    style={{
-                        clipPath: clipPath,
-                        WebkitClipPath: clipPath
-                    }}
-                >
-                    <div className="wheel-slice-bg" style={{ backgroundColor: item.color }}></div>
-                    <div
-                        className="wheel-text-container"
-                        style={{
-                            transform: `rotate(${rotationAngle}deg)`
-                        }}
-                    >
-                        <span className="wheel-text" style={{ fontSize: `${size}px` }}>{item.name}</span>
-                    </div>
-                </div>
-            );
-        });
-    };
-
-    return (
-        <motion.div
-            className={`wheel-container ${isSpinning ? 'is-spinning' : ''} ${isTensionMode ? 'tension' : ''}`}
-            animate={{ scale: isTensionMode ? 1.08 : 1 }}
-            transition={{ duration: 1.5, ease: "easeOut" }}
-        >
-            <div className="pointer"></div>
-            <motion.div
-                className="wheel"
-                style={{ rotate: rotation }}
-                animate={controls}
-                onPanStart={handleDragStart}
-                onPan={(_, info) => {
-                    // Convert linear pixel pan into rotational degrees without physically moving the wheel div
-                    rotation.set(rotation.get() + info.delta.x + info.delta.y);
-                }}
-                onPanEnd={handleDragEnd}
-            >
-                {/* Glossy specular highlight layer */}
-                <div className="wheel-gloss"></div>
-
-                {renderSlices()}
-                {items.map((_, index) => {
-                    const rotationAngle = (index * 360) / items.length + (360 / items.length) / 2;
-                    return (
-                        <div
-                            key={`divider-${index}`}
-                            className="wheel-divider"
-                            style={{
-                                transform: `translateX(-50%) rotate(${rotationAngle}deg)`
-                            }}
-                        />
-                    );
-                })}
-            </motion.div>
-            <div className="wheel-center">
-                <button
-                    className="spin-button"
-                    onClick={handleSpinStart}
-                    disabled={isSpinning || items.length === 0}
-                >
-                    {items.length === 0 ? "Add Items" : "SPIN"}
-                </button>
-            </div>
-        </motion.div>
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
+import { animate, motion, useMotionValue } from "framer-motion";
+import { initAudio, playTickSound } from "../utils/audio";
+import { landingAngle, randomIndex, textColor } from "../utils/model";
+import "./Wheel.css";
+const point = (angle, radius) => [
+  250 + radius * Math.sin((angle * Math.PI) / 180),
+  250 - radius * Math.cos((angle * Math.PI) / 180),
+];
+function segmentPath(index, count) {
+  const half = 180 / count;
+  const start = point((index * 360) / count - half, 232);
+  const end = point((index * 360) / count + half, 232);
+  return `M 250 250 L ${start.join(" ")} A 232 232 0 0 1 ${end.join(" ")} Z`;
+}
+const Wheel = forwardRef(function Wheel(
+  {
+    items,
+    winnerId,
+    settings,
+    reducedMotion,
+    onStart,
+    onComplete,
+    spinning,
+    onEmpty,
+  },
+  ref,
+) {
+  const rotation = useMotionValue(0);
+  const busy = useRef(false);
+  const animation = useRef(null);
+  const pointerRef = useRef(null);
+  const [selectedId, setSelectedId] = useState(null);
+  const signature = items
+    .map((item) => `${item.id}:${item.name}:${item.color}`)
+    .join("|");
+  useEffect(() => {
+    rotation.set(0);
+    setSelectedId(null);
+  }, [signature, rotation]);
+  useEffect(() => () => animation.current?.stop(), []);
+  const spin = () => {
+    if (busy.current) return;
+    if (!items.length) {
+      onEmpty();
+      return;
+    }
+    busy.current = true;
+    const snapshot = items.map((item) => ({ ...item }));
+    let index;
+    try {
+      index = randomIndex(snapshot.length);
+    } catch {
+      busy.current = false;
+      return;
+    }
+    const winner = snapshot[index];
+    const start = rotation.get();
+    const end = landingAngle(start, index, snapshot.length);
+    setSelectedId(null);
+    onStart();
+    if (settings.sound) initAudio();
+    let lastTick = Math.floor(
+      (start + 180 / snapshot.length) / (360 / snapshot.length),
     );
-};
-
+    const finish = () => {
+      busy.current = false;
+      setSelectedId(winner.id);
+      onComplete(winner, end, snapshot.length);
+    };
+    if (reducedMotion) {
+      rotation.set(end);
+      finish();
+      return;
+    }
+    animation.current = animate(rotation, end, {
+      duration: settings.duration,
+      ease: [0.2, 0.04, 0.12, 1],
+      onUpdate: (value) => {
+        const tick = Math.floor(
+          (value + 180 / snapshot.length) / (360 / snapshot.length),
+        );
+        if (tick !== lastTick && !reducedMotion) {
+          lastTick = tick;
+          if (settings.sound) playTickSound();
+          pointerRef.current?.animate(
+            [
+              { transform: "translateX(-50%) rotate(-12deg)" },
+              { transform: "translateX(-50%) rotate(0deg)" },
+            ],
+            { duration: 100 },
+          );
+        }
+      },
+      onComplete: finish,
+    });
+  };
+  useImperativeHandle(ref, () => ({ spin }));
+  const numeric = items.length > 18;
+  const selected = winnerId && selectedId === winnerId ? winnerId : null;
+  return (
+    <div className={`wheel-container ${spinning ? "is-spinning" : ""}`}>
+      <div className="pointer" ref={pointerRef} aria-hidden="true" />
+      <motion.svg
+        className="wheel"
+        viewBox="0 0 500 500"
+        style={{ rotate: rotation }}
+        aria-hidden="true"
+      >
+        <defs>
+          <radialGradient id="wheel-depth">
+            <stop offset="0%" stopColor="white" stopOpacity=".13" />
+            <stop offset="75%" stopColor="white" stopOpacity="0" />
+            <stop offset="100%" stopColor="black" stopOpacity=".15" />
+          </radialGradient>
+        </defs>
+        {!items.length && <circle cx="250" cy="250" r="232" fill="#202f45" />}
+        {items.map((item, index) => {
+          const angle = (index * 360) / items.length;
+          const [x, y] = point(angle, numeric ? 187 : 152);
+          const label = numeric
+            ? String(index + 1)
+            : item.name.length > 18
+              ? item.name.slice(0, 17) + "…"
+              : item.name;
+          const fontSize = numeric
+            ? 13
+            : Math.min(
+                19,
+                Math.max(11, 140 / Math.max(label.length * 0.56, 1)),
+                150 / items.length,
+              );
+          return (
+            <g key={item.id} data-item-id={item.id}>
+              {items.length === 1 ? (
+                <circle cx="250" cy="250" r="232" fill={item.color} />
+              ) : (
+                <path
+                  d={segmentPath(index, items.length)}
+                  fill={item.color}
+                  stroke="#132037"
+                  strokeOpacity=".25"
+                  strokeWidth="1.5"
+                />
+              )}
+              {selected === item.id &&
+                (items.length === 1 ? (
+                  <circle
+                    cx="250"
+                    cy="250"
+                    r="227"
+                    className="winning-segment"
+                  />
+                ) : (
+                  <path
+                    d={segmentPath(index, items.length)}
+                    className="winning-segment"
+                  />
+                ))}
+              <text
+                x={x}
+                y={y}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                transform={`rotate(${numeric ? angle : angle < 180 ? angle - 90 : angle + 90}, ${x}, ${y})`}
+                fill={textColor(item.color)}
+                fontSize={fontSize}
+                fontWeight="650"
+              >
+                {label}
+              </text>
+            </g>
+          );
+        })}
+        <circle cx="250" cy="250" r="232" fill="url(#wheel-depth)" />
+        <circle
+          cx="250"
+          cy="250"
+          r="239"
+          fill="none"
+          stroke="#91a1bb"
+          strokeWidth="8"
+        />
+        <circle
+          cx="250"
+          cy="250"
+          r="243"
+          fill="none"
+          stroke="#e6edf7"
+          strokeOpacity=".65"
+          strokeWidth="2"
+        />
+      </motion.svg>
+      <button
+        className="spin-button"
+        onClick={spin}
+        disabled={spinning}
+        aria-label={items.length ? "Spin wheel" : "Add entries to wheel"}
+      >
+        {spinning ? (
+          <>
+            <span className="spin-dot" />
+            Spinning
+          </>
+        ) : items.length ? (
+          <>
+            SPIN<span>your wheel</span>
+          </>
+        ) : (
+          <>
+            ADD<span>entries</span>
+          </>
+        )}
+      </button>
+    </div>
+  );
+});
 export default Wheel;
