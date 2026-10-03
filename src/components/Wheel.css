@@ -70,6 +70,7 @@
   text-transform: none;
 }
 .spin-button:hover:enabled {
+  background: linear-gradient(150deg, #d5e6fc, #82ade7);
   filter: brightness(1.1);
 }
 .spin-button:disabled {
