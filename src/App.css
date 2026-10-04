@@ -365,6 +365,28 @@
   flex-wrap: wrap;
   margin-top: 20px;
 }
+.share-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 9px 13px;
+  border: 1px solid #568a72;
+  border-radius: 9px;
+  background: #204c3a;
+  color: #edfdf5;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.share-whatsapp:hover {
+  background: #2d644c;
+}
+.share-whatsapp:focus-visible {
+  outline: 3px solid #a9c8f0;
+  outline-offset: 3px;
+}
 .options-list {
   display: flex;
   flex-direction: column;

@@ -264,6 +264,16 @@ function App() {
       );
     }
   };
+  const shareWheel = async () => {
+    try {
+      await navigator.share({ title: state.title, url: shareUrl });
+      setDialogMessage("Wheel shared.");
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        setDialogMessage("Sharing is unavailable here. Use WhatsApp or Copy link below.");
+      }
+    }
+  };
   return (
     <div
       className={`app-layout ${presentation ? "presentation" : ""} ${reducedMotion ? "reduce-motion" : ""}`}
@@ -672,9 +682,8 @@ function App() {
           {modal === "share" && (
             <>
               <p className="dialog-intro">
-                Send this link to open a copy of your wheel. It contains the
-                wheel name, entries and colours; results and saved wheels stay
-                here.
+                Send your custom wheel to anyone, on any device. They can open
+                the link, preview your entries and choose Open this wheel to play.
               </p>
               <label htmlFor="share-link" className="field-label">
                 Wheel link
@@ -687,13 +696,31 @@ function App() {
                 onFocus={(event) => event.target.select()}
               />
               <p className="dialog-note">
-                Anyone with this link can read its entries. Later edits will not
-                change their copy.
+                The link includes your wheel name, entries and colours. Anyone
+                with it can open a copy, without an account. Later edits need a
+                new link; results and saved wheels stay on this browser.
               </p>
-              <button className="primary" onClick={copyLink}>
-                <Copy size={16} />
-                Copy link
-              </button>
+              <div className="dialog-actions">
+                <a
+                  className="share-whatsapp"
+                  href={`https://wa.me/?text=${encodeURIComponent(`Try my wheel: ${shareUrl}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Share2 size={16} />
+                  Share on WhatsApp
+                </a>
+                <button className="primary" onClick={copyLink}>
+                  <Copy size={16} />
+                  Copy link
+                </button>
+                {typeof navigator.share === "function" && (
+                  <button onClick={shareWheel}>
+                    <Share2 size={16} />
+                    More sharing options
+                  </button>
+                )}
+              </div>
               <p className="dialog-message" role="status">
                 {dialogMessage}
               </p>
