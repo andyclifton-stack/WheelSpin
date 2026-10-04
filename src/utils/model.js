@@ -75,7 +75,7 @@ export const TEMPLATES = [
     ],
   },
   {
-    title: "competition winning",
+    title: "Competition winning",
     description: "Seven playful ways to celebrate a win.",
     names: [
       "I just beat the beep out of you.",
