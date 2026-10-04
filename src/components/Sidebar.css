@@ -18,6 +18,10 @@
 .title-input {
   margin-bottom: 15px;
 }
+.new-wheel-button {
+  width: 100%;
+  margin-bottom: 16px;
+}
 .editor-tools {
   display: flex;
   gap: 8px;

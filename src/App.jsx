@@ -58,6 +58,7 @@ function App() {
   const [bulkMode, setBulkMode] = useState("append");
   const [template, setTemplate] = useState(0);
   const [saveName, setSaveName] = useState("");
+  const [newWheelName, setNewWheelName] = useState("");
   const [shareUrl, setShareUrl] = useState("");
   const [dialogMessage, setDialogMessage] = useState("");
   const [incoming, setIncoming] = useState(null);
@@ -164,6 +165,7 @@ function App() {
   const openModal = (name) => {
     if (spinningRef.current) return;
     setDialogMessage("");
+    if (name === "new") setNewWheelName("");
     if (name === "save") setSaveName(stateRef.current.title || "My wheel");
     if (name === "share") {
       try {
@@ -454,10 +456,11 @@ function App() {
           title={
             {
               editor: "Edit your wheel",
+              new: "Create a new wheel",
               templates: "Choose a template",
               bulk: "Paste your entries",
-              save: "Save this wheel",
-              saved: "My saved wheels",
+              save: "Save as template",
+              saved: "My templates",
               share: "Share your wheel",
               history: "Recent results",
               settings: "Wheel options",
@@ -471,11 +474,30 @@ function App() {
           {modal === "editor" && (
             <Sidebar {...sidebarProps} onDone={closeModal} />
           )}
+          {modal === "new" && (
+            <form onSubmit={(event) => {
+              event.preventDefault();
+              if (!newWheelName.trim()) return;
+              mutate({ title: newWheelName.trim(), items: [] }, "New wheel created. Add your entries, then Save as template to reuse it. Undo restores your previous wheel.");
+              if (isMobile) setModal("editor");
+              else closeModal();
+            }}>
+              <p className="dialog-intro">Start with a blank wheel. Add your own entries or paste a list, then save it as a reusable template.</p>
+              <label className="field-label" htmlFor="new-wheel-name">New wheel name</label>
+              <input id="new-wheel-name" maxLength={80} value={newWheelName} onChange={(event) => setNewWheelName(event.target.value)} placeholder="e.g. Friday challenges" />
+              <p className="dialog-note">Your saved templates are kept. Undo can restore the wheel you were editing.</p>
+              <button type="submit" className="primary dialog-primary" disabled={!newWheelName.trim()}>Create blank wheel</button>
+            </form>
+          )}
           {modal === "templates" && (
             <>
               <p className="dialog-intro">
-                Start with a ready-made list, then make it yours.
+                Start with a ready-made list, create a blank wheel, or open one of your own templates.
               </p>
+              <div className="dialog-actions">
+                <button onClick={() => openModal("new")}>New wheel</button>
+                <button onClick={() => openModal("saved")}>My templates ({state.saved.length})</button>
+              </div>
               <div className="template-grid">
                 {TEMPLATES.map((row, index) => (
                   <button
@@ -585,11 +607,11 @@ function App() {
           {modal === "save" && (
             <>
               <p className="dialog-intro">
-                Keep up to 20 favourite wheels on this browser. Save again to
-                create another snapshot.
+                Keep this wheel as a reusable template in My templates.
+                You can save up to 20 on this browser. Use Share to send a copy to another device.
               </p>
               <label className="field-label" htmlFor="save-name">
-                Saved wheel name
+                Template name
               </label>
               <input
                 id="save-name"
@@ -599,7 +621,7 @@ function App() {
               />
               <button
                 className="primary dialog-primary"
-                disabled={!saveName.trim() || state.saved.length >= 20}
+                disabled={!saveName.trim() || !state.items.length || state.saved.length >= 20}
                 onClick={() => {
                   mutate(
                     {
@@ -612,12 +634,12 @@ function App() {
                         ...state.saved,
                       ],
                     },
-                    "Wheel saved to My wheels.",
+                    "Template saved to My templates.",
                   );
                   closeModal();
                 }}
               >
-                Save wheel
+                Save template
               </button>
               {state.saved.length >= 20 && (
                 <p role="alert">
@@ -629,11 +651,11 @@ function App() {
           {modal === "saved" && (
             <>
               <p className="dialog-intro">
-                Loading a wheel replaces the current list. Undo can restore it.
+                Your reusable templates on this browser, including any wheels you previously saved. Loading one replaces the current list; Undo can restore it.
               </p>
               {!state.saved.length ? (
                 <p className="empty-message">
-                  No saved wheels yet. Use Save wheel in the editor.
+                  No templates saved yet. Choose New wheel, add your entries, then Save as template in the editor.
                 </p>
               ) : (
                 <div className="saved-list">

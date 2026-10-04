@@ -73,6 +73,10 @@ export default function Sidebar({
         <span className="count">{items.length}/50</span>
       </div>
       <fieldset disabled={disabled}>
+        <button className="new-wheel-button" onClick={() => openModal("new")}>
+          <Plus size={16} />
+          New wheel
+        </button>
         <label className="field-label" htmlFor="wheel-title">
           Wheel name
         </label>
@@ -181,13 +185,13 @@ export default function Sidebar({
           </div>
         )}
         <div className="editor-footer">
-          <button onClick={() => openModal("save")}>
+          <button disabled={!items.length} onClick={() => openModal("save")}>
             <Save size={16} />
-            Save wheel
+            Save as template
           </button>
           <button onClick={() => openModal("saved")}>
             <FolderOpen size={16} />
-            My wheels
+            My templates
           </button>
           <button disabled={!canUndo} onClick={undo}>
             <Undo2 size={16} />
@@ -195,7 +199,7 @@ export default function Sidebar({
           </button>
         </div>
       </fieldset>
-      <p className="local-note">Changes stay on this browser automatically.</p>
+      <p className="local-note">Save as template to reuse this wheel. Your templates stay on this browser; use Share to send a copy.</p>
       {onDone && (
         <button className="primary done-button" onClick={onDone}>
           Done editing
