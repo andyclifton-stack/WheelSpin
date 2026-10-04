@@ -10,6 +10,7 @@ export const COLORS = [
   "#65bdcc",
 ];
 export const STORAGE_KEY = "wheelspin_v2";
+export const keepAllEntries = (settings) => ({ ...settings, removeAfter: false });
 export const makeId = () =>
   typeof crypto.randomUUID === "function"
     ? crypto.randomUUID()

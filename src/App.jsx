@@ -29,13 +29,15 @@ import {
   shareHash,
   MAX_ITEMS,
   resultsCsv,
+  keepAllEntries,
 } from "./utils/model";
 import "./App.css";
 
 function App() {
-  const [state, setState] = useState(() =>
-    loadState({ getItem: (key) => window.localStorage.getItem(key) }),
-  );
+  const [state, setState] = useState(() => {
+    const loaded = loadState({ getItem: (key) => window.localStorage.getItem(key) });
+    return { ...loaded, settings: keepAllEntries(loaded.settings) };
+  });
   const stateRef = useRef(state);
   stateRef.current = state;
   const [spinning, setSpinning] = useState(false);
@@ -162,6 +164,10 @@ function App() {
     setWinner(null);
     setNotice("Last action undone.");
   };
+  const replaceWheel = (value, message) => mutate({
+    ...value,
+    settings: keepAllEntries(stateRef.current.settings),
+  }, message);
   const openModal = (name) => {
     if (spinningRef.current) return;
     setDialogMessage("");
@@ -357,6 +363,11 @@ function App() {
                   ? "Numbers on the wheel match the numbered entries."
                   : "Tap the centre to spin, or press Space."}
           </p>
+          {state.settings.removeAfter && (
+            <button className="auto-remove-notice" disabled={spinning} onClick={() => mutate({settings: keepAllEntries(state.settings)}, "Automatic removal turned off.", false)}>
+              Auto-remove is on · Keep all entries instead
+            </button>
+          )}
           {state.items.length > 18 && (
             <button className="entry-key" onClick={() => openModal("entries")}>
               View numbered entries
@@ -478,7 +489,7 @@ function App() {
             <form onSubmit={(event) => {
               event.preventDefault();
               if (!newWheelName.trim()) return;
-              mutate({ title: newWheelName.trim(), items: [] }, "New wheel created. Add your entries, then Save as template to reuse it. Undo restores your previous wheel.");
+              replaceWheel({ title: newWheelName.trim(), items: [] }, "New wheel created. Add your entries, then Save as template to reuse it. Undo restores your previous wheel.");
               if (isMobile) setModal("editor");
               else closeModal();
             }}>
@@ -528,7 +539,7 @@ function App() {
               <button
                 className="primary"
                 onClick={() => {
-                  mutate(
+                  replaceWheel(
                     {
                       title: TEMPLATES[template].title,
                       items: makeItems(TEMPLATES[template].names),
@@ -593,6 +604,7 @@ function App() {
                         ...(bulkMode === "append" ? state.items : []),
                         ...makeItems(lines),
                       ],
+                      ...(bulkMode === "replace" ? { settings: keepAllEntries(stateRef.current.settings) } : {}),
                     },
                     "List added. Undo is available.",
                   );
@@ -667,7 +679,7 @@ function App() {
                       </div>
                       <button
                         onClick={() => {
-                          mutate(
+                          replaceWheel(
                             {
                               title: row.title,
                               items: row.items.map((item) => ({ ...item })),
@@ -854,7 +866,8 @@ function App() {
                   <div>
                     <strong>Remove winner automatically</strong>
                     <span>
-                      Draw without repeats. Undo restores a selection.
+                      Draw without repeats for this session. A new wheel or page
+                      reload turns this off. Undo restores a selection.
                     </span>
                   </div>
                   <input
@@ -957,7 +970,7 @@ function App() {
                     <button
                       className="primary"
                       onClick={() => {
-                        mutate(
+                        replaceWheel(
                           { title: incoming.title, items: incoming.items },
                           "Shared wheel opened.",
                         );

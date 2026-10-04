@@ -380,6 +380,12 @@
   font-weight: 600;
   text-decoration: none;
 }
+.auto-remove-notice {
+  margin: 0 auto 12px;
+  border-color: #b69a57;
+  color: #f4dc9f;
+  font-size: 12px;
+}
 .share-whatsapp:hover {
   background: #2d644c;
 }

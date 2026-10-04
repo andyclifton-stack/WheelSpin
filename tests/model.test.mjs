@@ -12,7 +12,13 @@ import {
   parseShare,
   textColor,
   resultsCsv,
+  keepAllEntries,
 } from "../src/utils/model.js";
+test("a fresh wheel or session keeps entries even when auto-removal was previously enabled", () => {
+  const prior = { sound: true, reducedMotion: false, duration: 3, removeAfter: true };
+  assert.deepEqual(keepAllEntries(prior), { ...prior, removeAfter: false });
+  assert.equal(prior.removeAfter, true);
+});
 test("pointer lands on every winner for 1–50 entries, including repeated rotations", () => {
   for (let count = 1; count <= 50; count++)
     for (let index = 0; index < count; index++)
