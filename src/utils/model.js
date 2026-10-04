@@ -249,6 +249,20 @@ export function shareHash(wheel) {
       .replace(/=+$/, "")
   );
 }
+export function wheelShareMessage(wheel, url) {
+  const count = wheel.items.length;
+  return [
+    "🎡 *Fancy a spin?*",
+    "",
+    `✨ ${wheel.title || "My wheel"}`,
+    `🎯 ${count} ${count === 1 ? "choice" : "choices"}. What will you land on?`,
+    "",
+    "Tap the link, choose ‘Open this wheel’, then hit SPIN! No account needed.",
+    "",
+    "👇 Give my wheel a go:",
+    url,
+  ].join("\n");
+}
 export function parseShare(hash) {
   if (!hash.startsWith("#wheel=")) return null;
   if (hash.length > 24000) throw new Error("This shared wheel is too large.");

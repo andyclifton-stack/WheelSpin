@@ -27,6 +27,7 @@ import {
   makeId,
   parseShare,
   shareHash,
+  wheelShareMessage,
   MAX_ITEMS,
   resultsCsv,
   keepAllEntries,
@@ -737,7 +738,7 @@ function App() {
               <div className="dialog-actions">
                 <a
                   className="share-whatsapp"
-                  href={`https://wa.me/?text=${encodeURIComponent(`Try my wheel: ${shareUrl}`)}`}
+                  href={`https://wa.me/?text=${encodeURIComponent(wheelShareMessage(state, shareUrl))}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -755,6 +756,11 @@ function App() {
                   </button>
                 )}
               </div>
+              <details className="share-message-preview">
+                <summary>Preview WhatsApp message</summary>
+                <p>{wheelShareMessage(state, "[Your wheel link]")}</p>
+                <small>The full playable link is included when you share.</small>
+              </details>
               <p className="dialog-message" role="status">
                 {dialogMessage}
               </p>

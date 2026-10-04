@@ -9,11 +9,22 @@ import {
   landingAngle,
   indexAtPointer,
   shareHash,
+  wheelShareMessage,
   parseShare,
   textColor,
   resultsCsv,
   keepAllEntries,
 } from "../src/utils/model.js";
+test("WhatsApp message preserves the full playable link and formats the wheel details", () => {
+  const wheel = { title: "Competition winning 👀", items: makeItems(["1", "2", "tree"]) };
+  const url = "https://fingergame.co.uk/WheelSpin/" + shareHash(wheel);
+  const message = wheelShareMessage(wheel, url);
+  assert.ok(message.includes("✨ Competition winning 👀\n🎯 3 choices."));
+  assert.ok(message.includes("No account needed."));
+  assert.equal(message.split("\n").at(-1), url);
+  assert.deepEqual(parseShare(new URL(message.split("\n").at(-1)).hash).items.map(row => row.name), ["1", "2", "tree"]);
+  assert.ok(wheelShareMessage({ title: "One", items: makeItems(["Solo"]) }, url).includes("1 choice."));
+});
 test("a fresh wheel or session keeps entries even when auto-removal was previously enabled", () => {
   const prior = { sound: true, reducedMotion: false, duration: 3, removeAfter: true };
   assert.deepEqual(keepAllEntries(prior), { ...prior, removeAfter: false });
