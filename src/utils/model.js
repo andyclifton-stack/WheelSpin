@@ -74,6 +74,19 @@ export const TEMPLATES = [
       "Explore somewhere new",
     ],
   },
+  {
+    title: "competition winning",
+    description: "Seven playful ways to celebrate a win.",
+    names: [
+      "I just beat the beep out of you.",
+      "Say “HA HA HA HA!” like a cartoon villain.",
+      "Give them the side eye. 👀",
+      "Do a ridiculously slow victory dance.",
+      "Pretend to polish your imaginary winner’s trophy.",
+      "Walk away in slow motion without looking back.",
+      "Whisper, “Better luck next time…” 😏",
+    ],
+  },
 ];
 export const defaults = () => ({
   title: "Dinner choices",
