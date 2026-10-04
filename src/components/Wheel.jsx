@@ -121,6 +121,7 @@ const Wheel = forwardRef(function Wheel(
       <motion.svg
         className="wheel"
         viewBox="0 0 500 500"
+        preserveAspectRatio="xMidYMid meet"
         style={{ rotate: rotation }}
         aria-hidden="true"
       >
